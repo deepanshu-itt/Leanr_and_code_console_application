@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 
@@ -27,6 +27,29 @@ class Product(database.Model):
     description = database.Column(database.String(120), nullable=False)
     category_id = database.Column(database.Integer, database.ForeignKey('category.id'), nullable=False)
     category = database.relationship('Category', backref=database.backref('products', lazy=True))
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    json_data = request.get_json()
+    username = json_data.get('username')
+    password = json_data.get('password')
+    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+    new_user = User(username=username, password=hashed_password)
+    database.session.add(new_user)
+    database.session.commit()
+    return jsonify({'message': 'User created successfully. Navigating to Login'}), 201
+
+@app.route('/login', methods=['POST'])
+def login():
+    json_data = request.get_json()
+    username = json_data.get('username')
+    password = json_data.get('password')
+    is_user_exist = User.query.filter_by(username=username).first()
+    if is_user_exist and bcrypt.check_password_hash(is_user_exist.password, password):
+        app.config['USER_LOGGED_IN'] = True
+        app.config['LOGGED_IN_USER'] = is_user_exist.username  
+        return jsonify({'message': 'Login successful'}), 200
+    return jsonify({'message': 'Invalid credentials or user does not exist'}), 401
 
 
 def create_tables():
