@@ -1,3 +1,9 @@
+import requests
+BASE_URL = 'http://127.0.0.1:5000' 
+
+USER_LOGGED_IN = False
+LOGGED_IN_USER = None
+
 def print_main_menu():
     print("\n1) Login")
     print("2) Signup")
@@ -9,7 +15,16 @@ def signup():
 
 
 def login():
-    return 
+    global USER_LOGGED_IN, LOGGED_IN_USER
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+    response = requests.post(f'{BASE_URL}/login', json={'username': username, 'password': password})
+    if response.status_code == 200:
+        USER_LOGGED_IN = True
+        LOGGED_IN_USER = username
+        print("Login successful!")
+    else:
+        print("Invalid credentials, please try again.")
 
 
 def print_user_menu():
