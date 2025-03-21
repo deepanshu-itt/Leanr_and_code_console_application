@@ -80,8 +80,8 @@ def create_tables():
 
         if not User.query.first():
             hashed_password = bcrypt.generate_password_hash("admin").decode('utf-8')
-            user1 = User(username="admin", password=hashed_password)
-            database.session.add(user1)
+            admin_user = User(username="admin", password=hashed_password)
+            database.session.add(admin_user)
             database.session.commit()
         
         if not Category.query.first():
