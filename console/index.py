@@ -9,9 +9,21 @@ def print_main_menu():
     print("2) Signup")
     print("3) Exit")
 
+def print_user_menu():
+    print("\n1. View Cart")
+    print("2. List Categories")
+    print("3. Logout")
+
+
 
 def signup():
-    return
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+    response = requests.post(f'{BASE_URL}/signup', json={'username': username, 'password': password})
+    if response.status_code == 201:
+        print("Signup successful!")
+    else:
+        print("Signup failed.")
 
 
 def login():
@@ -27,12 +39,15 @@ def login():
         print("Invalid credentials, please try again.")
 
 
-def print_user_menu():
-    return
-
-
 def logout():
-    return
+    global USER_LOGGED_IN, LOGGED_IN_USER
+    response = requests.post(f'{BASE_URL}/logout')
+    if response.status_code == 200:
+        USER_LOGGED_IN = False
+        LOGGED_IN_USER = None
+        print("Logged out successfully.")
+    else:
+        print("Failed to log out.")
 
 
 def main():

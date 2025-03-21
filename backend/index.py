@@ -73,6 +73,12 @@ def logout():
     app.config['LOGGED_IN_USER'] = None
     return jsonify({'message': 'Logged out successfully'}), 200
 
+@app.route('/categories', methods=['GET'])
+def get_categories():
+    if not app.config['USER_LOGGED_IN']:
+        return jsonify({'message': 'You must be logged in to view categories.'}), 403
+    categories = Category.query.all()
+    return jsonify([{'id': category.id, 'name': category.name} for category in categories])
 
 def create_tables():
     with app.app_context():
