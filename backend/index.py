@@ -28,6 +28,21 @@ class Product(database.Model):
     category_id = database.Column(database.Integer, database.ForeignKey('category.id'), nullable=False)
     category = database.relationship('Category', backref=database.backref('products', lazy=True))
 
+
+class Cart(database.Model):
+    id = database.Column(database.Integer, primary_key=True)
+    user_id = database.Column(database.Integer, database.ForeignKey('user.id'), nullable=False)
+    product_id = database.Column(database.Integer, database.ForeignKey('product.id'), nullable=False)
+    quantity = database.Column(database.Integer, nullable=False)
+
+class Review(database.Model):
+    id = database.Column(database.Integer, primary_key=True)
+    product_id = database.Column(database.Integer, database.ForeignKey('product.id'), nullable=False)
+    user_id = database.Column(database.Integer, database.ForeignKey('user.id'), nullable=False)
+    rating = database.Column(database.Integer, nullable=False)
+    comment = database.Column(database.String(500), nullable=True)
+    user = database.relationship('User', backref='reviews', lazy=True)
+
 @app.route('/signup', methods=['POST'])
 def signup():
     json_data = request.get_json()
@@ -50,6 +65,13 @@ def login():
         app.config['LOGGED_IN_USER'] = is_user_exist.username  
         return jsonify({'message': 'Login successful'}), 200
     return jsonify({'message': 'Invalid credentials or user does not exist'}), 401
+
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    app.config['USER_LOGGED_IN'] = False
+    app.config['LOGGED_IN_USER'] = None
+    return jsonify({'message': 'Logged out successfully'}), 200
 
 
 def create_tables():
