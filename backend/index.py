@@ -73,12 +73,44 @@ def logout():
     app.config['LOGGED_IN_USER'] = None
     return jsonify({'message': 'Logged out successfully'}), 200
 
+
 @app.route('/categories', methods=['GET'])
 def get_categories():
     if not app.config['USER_LOGGED_IN']:
         return jsonify({'message': 'You must be logged in to view categories.'}), 403
     categories = Category.query.all()
     return jsonify([{'id': category.id, 'name': category.name} for category in categories])
+
+
+@app.route('/products/<int:category_id>', methods=['GET'])
+def get_products(category_id):
+    if not app.config['USER_LOGGED_IN']:
+        return jsonify({'message': 'You must be logged in to view products.'}), 403
+    
+    products = Product.query.filter_by(category_id=category_id).all()
+
+    products_data = []
+    for product in products:
+        reviews = Review.query.filter_by(product_id=product.id).all()
+        
+        reviews_data = [{
+            'id': review.id,
+            'rating': review.rating,
+            'comment': review.comment,
+            'user_id': review.user_id,
+            'username': review.user.username
+        } for review in reviews]
+
+        products_data.append({
+            'id': product.id,
+            'name': product.name,
+            'description': product.description,
+            'price': product.price,
+            'reviews': reviews_data
+        })
+
+    return jsonify(products_data)
+
 
 def create_tables():
     with app.app_context():
