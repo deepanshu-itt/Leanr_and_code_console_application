@@ -75,23 +75,23 @@ def logout():
 
 
 @app.route('/categories', methods=['GET'])
-def get_categories():
+def get_Categories():
     if not app.config['USER_LOGGED_IN']:
         return jsonify({'message': 'You must be logged in to view categories.'}), 403
-    categories = Category.query.all()
-    return jsonify([{'id': category.id, 'name': category.name} for category in categories])
+    allCategories = Category.query.all()
+    return jsonify([{'id': category.id, 'name': category.name} for category in allCategories])
 
 
 @app.route('/products/<int:category_id>', methods=['GET'])
-def get_products(category_id):
+def get_Products_By_Category(category_id):
     if not app.config['USER_LOGGED_IN']:
         return jsonify({'message': 'You must be logged in to view products.'}), 403
     
-    products = Product.query.filter_by(category_id=category_id).all()
+    productsByCategoryId = Product.query.filter_by(category_id=category_id).all()
 
     products_data = []
-    for product in products:
-        reviews = Review.query.filter_by(product_id=product.id).all()
+    for product in productsByCategoryId:
+        reviewsByProductId = Review.query.filter_by(product_id=product.id).all()
         
         reviews_data = [{
             'id': review.id,
@@ -99,7 +99,7 @@ def get_products(category_id):
             'comment': review.comment,
             'user_id': review.user_id,
             'username': review.user.username
-        } for review in reviews]
+        } for review in reviewsByProductId]
 
         products_data.append({
             'id': product.id,
@@ -110,6 +110,103 @@ def get_products(category_id):
         })
 
     return jsonify(products_data)
+
+
+@app.route('/add_to_cart', methods=['POST'])
+def add_To_Cart():
+
+    if not app.config['USER_LOGGED_IN']:
+        return jsonify({'message': 'You must be logged in to add items to the cart.'}), 403
+
+    json_data = request.get_json()
+    product_id = json_data.get('product_id')
+    product_quantity = json_data.get('quantity')
+
+    if not product_id or not product_quantity:
+        return jsonify({'message': 'Product ID and quantity are required.'}), 400
+
+    try:
+        user_Input_Product_Id = int(product_id["id"])
+        user_Input_Product_Quantity = int(product_quantity)
+    except ValueError:
+        return jsonify({'message': 'Invalid product Id or quantity.'}), 400
+
+    productById = Product.query.filter_by(id=user_Input_Product_Id).first() 
+    if not productById:
+        return jsonify({'message': 'Product not found.'}), 404
+
+    logged_in_user = User.query.filter_by(username=app.config['LOGGED_IN_USER']).first()
+
+    user_Cart_Product = Cart.query.filter_by(user_id=logged_in_user.id, product_id=user_Input_Product_Id).first()
+
+    if user_Cart_Product:
+        user_Cart_Product.quantity +=  user_Input_Product_Quantity
+        database.session.commit()
+        return jsonify({'message': 'Product quantity updated in the cart.'}), 200
+    else:
+        cart_item = Cart(user_id=logged_in_user.id, product_id=user_Input_Product_Id, quantity= user_Input_Product_Quantity)
+        database.session.add(cart_item)
+        database.session.commit()
+        return jsonify({'message': 'Product added to cart.'}), 201
+
+
+@app.route('/add_review', methods=['POST'])
+def add_review():
+    if not app.config['USER_LOGGED_IN']:
+        return jsonify({'message': 'You must be logged in to add a review.'}), 403
+
+    json_data = request.get_json()
+    user_Input_Product = json_data.get('product_id')
+    user_Input_Product_Id = user_Input_Product.get('id')
+    user_Input_Rating = int(json_data.get('rating'))
+    user_Input_Comment = str(json_data.get('comment'))
+
+    if not (1 <= user_Input_Rating <= 5):
+        return jsonify({'message': 'Rating must be between 1 and 5.'}), 400
+
+    
+    productById = Product.query.filter_by(id=user_Input_Product_Id).first()
+
+    if not productById:
+        return jsonify({'message': 'Product not found.'}), 404
+
+    logged_in_user = User.query.filter_by(username=app.config['LOGGED_IN_USER']).first()
+
+    review = Review(product_id=user_Input_Product_Id, user_id=logged_in_user.id, rating=user_Input_Rating, comment=user_Input_Comment)
+    database.session.add(review)
+    database.session.commit()
+
+    return jsonify({'message': 'Review added successfully'}), 201
+
+
+@app.route('/view_cart', methods=['GET'])
+def view_cart():
+    if not app.config['USER_LOGGED_IN']:
+        return jsonify({'message': 'You must be logged in to view your cart.'}), 403
+
+    logged_in_user = User.query.filter_by(username=app.config['LOGGED_IN_USER']).first()
+    cart_items = Cart.query.filter_by(user_id=logged_in_user.id).all()
+    
+    user_cart_items = []
+    user_cart_total_amount = 0.0  
+    
+    for item in cart_items:
+        product = Product.query.get(item.product_id)
+        item_total = product.price * item.quantity  
+    
+        user_cart_items.append({
+            'product_id': item.product_id,
+            'product_name': product.name,
+            'quantity': item.quantity,
+            'price': round(product.price, 2),  
+            'total_price': round(item_total, 2)  
+        })
+        
+        user_cart_total_amount += item_total
+    
+    user_cart_total_amount = round(user_cart_total_amount, 2)
+
+    return jsonify({'items': user_cart_items, 'total_amount': user_cart_total_amount}), 200
 
 
 def create_tables():
