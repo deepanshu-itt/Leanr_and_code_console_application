@@ -209,6 +209,41 @@ def view_cart():
     return jsonify({'items': user_cart_items, 'total_amount': user_cart_total_amount}), 200
 
 
+@app.route('/update_cart_quantity', methods=['PUT'])
+def update_cart_quantity():
+    if not app.config['USER_LOGGED_IN']:
+        return jsonify({'message': 'You must be logged in to update the cart.'}), 403
+
+    json_Data = request.get_json()
+    user_Input_Product_Id = json_Data.get('product_id')
+    product_Quantity_To_Remove = json_Data.get('quantity_to_remove')
+
+    if not user_Input_Product_Id or not product_Quantity_To_Remove:
+        return jsonify({'message': 'Product ID and quantity to remove are required.'}), 400
+
+    logged_In_User = User.query.filter_by(username=app.config['LOGGED_IN_USER']).first()
+
+    cart_item = Cart.query.filter_by(user_id=logged_In_User.id, product_id=user_Input_Product_Id).first()
+
+    if not cart_item:
+        return jsonify({'message': 'Product not found in the cart.'}), 404
+
+    if cart_item.quantity < product_Quantity_To_Remove:
+        return jsonify({'message': 'Quantiy is greater than present in Cart.'}), 404
+
+    if cart_item.quantity >= product_Quantity_To_Remove:
+        cart_item.quantity -= product_Quantity_To_Remove
+        database.session.commit()
+        response = jsonify({'message': 'Product quantity removed from in the cart.'}), 200
+    
+    if cart_item.quantity == 0:
+        database.session.delete(cart_item)
+        database.session.commit()
+        response = jsonify({'message': 'Product removed from in the cart.'}), 200
+    
+    return response
+
+
 def create_tables():
     with app.app_context():
         database.create_all()
