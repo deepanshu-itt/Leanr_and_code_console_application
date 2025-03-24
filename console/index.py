@@ -1,34 +1,17 @@
 import requests
-BASE_URL = 'http://127.0.0.1:5000' 
+from dotenv import load_dotenv
+import os
+from menu import print_Main_Menu, print_Product_Menu, print_User_Menu
+from products import view_Product_Details, view_Products_By_Category
+from cart import view_Cart, add_To_Cart
+from auth import signup
+from product_review import add_Review
+load_dotenv()
+
+BASE_URL = os.getenv('BASE_URL')
 
 USER_LOGGED_IN = False
 LOGGED_IN_USER = None
-
-def print_Main_Menu():
-    print("\n1) Login")
-    print("2) Signup")
-    print("3) Exit")
-
-def print_User_Menu():
-    print("\n1. View Cart")
-    print("2. List Categories")
-    print("3. Logout")
-
-
-def print_Product_Menu():
-    print("\n1. Add to Cart")
-    print("2. Add Review")
-    print("3. Go Back")
-
-
-def signup():
-    username = input("Enter username: ")
-    password = input("Enter password: ")
-    response = requests.post(f'{BASE_URL}/signup', json={'username': username, 'password': password})
-    if response.status_code == 201:
-        print("Signup successful!")
-    else:
-        print("Signup failed.")
 
 
 def login():
@@ -55,10 +38,6 @@ def logout():
         print("Failed to log out.")
 
 
-def view_Cart():
-    return
-
-
 def view_Categories():
     response = requests.get(f'{BASE_URL}/categories')
     categories = []
@@ -71,33 +50,6 @@ def view_Categories():
     else:
         print("Failed to fetch categories.")
     return categories
-
-
-def view_Products_By_Category(category_id):
-    response = requests.get(f'{BASE_URL}/products/{category_id}')
-    products = []
-    if response.status_code == 200:
-        products_In_Json = response.json()
-        print("\nProducts in this category:")
-        for product in  products_In_Json:
-            print(f"ID: {product['id']}, Name: {product['name']}, Price: {product['price']}")
-        products = products_In_Json
-    else:
-        print("Failed to fetch products.")
-
-    return products
-
-
-def view_Product_Details():
-    return
-
-
-def add_To_Cart():
-    return 
-
-
-def add_Review():
-    return
 
 
 def handle_User_Not_Logged_In():
