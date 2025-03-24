@@ -60,11 +60,32 @@ def view_Cart():
 
 
 def view_Categories():
-    return
+    response = requests.get(f'{BASE_URL}/categories')
+    categories = []
+    if response.status_code == 200:
+        categories_In_Json = response.json()
+        print("\nCategories:")
+        for category in categories_In_Json:
+            print(f"{category['id']}. {category['name']}")
+        categories = categories_In_Json
+    else:
+        print("Failed to fetch categories.")
+    return categories
 
 
-def view_Products_By_Category():
-    return
+def view_Products_By_Category(category_id):
+    response = requests.get(f'{BASE_URL}/products/{category_id}')
+    products = []
+    if response.status_code == 200:
+        products_In_Json = response.json()
+        print("\nProducts in this category:")
+        for product in  products_In_Json:
+            print(f"ID: {product['id']}, Name: {product['name']}, Price: {product['price']}")
+        products = products_In_Json
+    else:
+        print("Failed to fetch products.")
+
+    return products
 
 
 def view_Product_Details():
