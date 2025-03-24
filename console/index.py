@@ -15,6 +15,11 @@ def print_User_Menu():
     print("3. Logout")
 
 
+def print_Product_Menu():
+    print("\n1. Add to Cart")
+    print("2. Add Review")
+    print("3. Go Back")
+
 
 def signup():
     username = input("Enter username: ")
@@ -65,9 +70,6 @@ def view_Products_By_Category():
 def view_Product_Details():
     return
 
-
-def print_Product_Menu():
-    return
 
 def add_To_Cart():
     return 
