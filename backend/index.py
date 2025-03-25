@@ -94,10 +94,8 @@ def get_Products_By_Category(category_id):
         reviewsByProductId = Review.query.filter_by(product_id=product.id).all()
         
         reviews_data = [{
-            'id': review.id,
             'rating': review.rating,
             'comment': review.comment,
-            'user_id': review.user_id,
             'username': review.user.username
         } for review in reviewsByProductId]
 
