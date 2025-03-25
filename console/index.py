@@ -94,14 +94,14 @@ def handle_Categories():
 
 def is_Product_Exists(category_choice, products):
     if products:
-            handle_product_details(category_choice, products)
+            handle_product_details(category_choice)
     else:
         print("Currently No details available for this Product.")
 
 
-def handle_product_details(category_choice, products):
+def handle_product_details(category_choice):
     product_choice = int(input("Enter product ID to view details: "))
-    product = view_Product_Details(product_choice, category_choice)
+    product = view_Product_Details(category_choice, product_choice,)
     user_Want_Menu = True
     if product:
         while user_Want_Menu:

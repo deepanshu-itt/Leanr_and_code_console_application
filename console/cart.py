@@ -47,7 +47,7 @@ def view_Cart():
     if cart_items:
         display_Cart(cart_items)
         remove_choice = get_Remove_Choice()
-        
+
         if remove_choice:
             try:
                 product_id = int(remove_choice)
@@ -77,6 +77,3 @@ def display_Cart(cart_items):
 def get_Remove_Choice():
     remove_choice = input("Enter product ID to reduce quantity or remove (or press Enter to skip): ")
     return remove_choice
-
-def remove_Product_From_Cart(product_id):
-    print(f"Removing product with ID: {product_id}")
