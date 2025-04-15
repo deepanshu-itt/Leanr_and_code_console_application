@@ -3,8 +3,8 @@ from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@127.0.0.1:3306/dummy'
-app.config['SECRET_KEY'] = 'your_secret_key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@127.0.0.1:3306/ecommerce'
+app.config['SECRET_KEY'] = 'secret_key'
 database = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
@@ -54,39 +54,71 @@ def signup():
     database.session.commit()
     return jsonify({'message': 'User created successfully. Navigating to Login'}), 201
 
+
 @app.route('/login', methods=['POST'])
 def login():
     json_data = request.get_json()
     username = json_data.get('username')
     password = json_data.get('password')
     is_user_exist = User.query.filter_by(username=username).first()
+    json_response = ""
+    status_code = 200
+
     if is_user_exist and bcrypt.check_password_hash(is_user_exist.password, password):
         app.config['USER_LOGGED_IN'] = True
         app.config['LOGGED_IN_USER'] = is_user_exist.username  
-        return jsonify({'message': 'Login successful'}), 200
-    return jsonify({'message': 'Invalid credentials or user does not exist'}), 401
+        json_response = jsonify({'message': 'Login successful'})
+        status_code = 200
+    else:
+        json_response = jsonify({'message': 'Invalid credentials or user does not exist'})
+        status_code = 401
+
+    return json_response, status_code
+
 
 
 @app.route('/logout', methods=['POST'])
 def logout():
     app.config['USER_LOGGED_IN'] = False
     app.config['LOGGED_IN_USER'] = None
+
     return jsonify({'message': 'Logged out successfully'}), 200
 
 
 @app.route('/categories', methods=['GET'])
 def get_Categories():
+    json_response = ""
+    status_code = 200
+
     if not app.config['USER_LOGGED_IN']:
-        return jsonify({'message': 'You must be logged in to view categories.'}), 403
-    allCategories = Category.query.all()
-    return jsonify([{'id': category.id, 'name': category.name} for category in allCategories])
+        json_response = jsonify({'message': 'You must be logged in to view categories.'})
+        status_code = 403
+    else:
+        allCategories = Category.query.all()
+        json_response = jsonify([{'id': category.id, 'name': category.name} for category in allCategories])
+        status_code = 200
+
+    return json_response, status_code
+
 
 
 @app.route('/products/<int:category_id>', methods=['GET'])
 def get_Products_By_Category(category_id):
+    json_response = ""
+    status_code = 200
+
     if not app.config['USER_LOGGED_IN']:
-        return jsonify({'message': 'You must be logged in to view products.'}), 403
+        json_response = jsonify({'message': 'You must be logged in to view products.'})
+        status_code = 403
     
+    else:
+        json_response = get_Products_From_Db(category_id)
+        status_code = 200
+    
+    return json_response, status_code
+    
+
+def get_Products_From_Db(category_id):
     productsByCategoryId = Product.query.filter_by(category_id=category_id).all()
 
     products_data = []
@@ -130,6 +162,7 @@ def add_To_Cart():
         return jsonify({'message': 'Invalid product Id or quantity.'}), 400
 
     productById = Product.query.filter_by(id=user_Input_Product_Id).first() 
+    
     if not productById:
         return jsonify({'message': 'Product not found.'}), 404
 
