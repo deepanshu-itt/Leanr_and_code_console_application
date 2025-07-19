@@ -1,10 +1,10 @@
 name: Generate Terraform Docs
-#on:
-#  push:
-#    branches: [ "main" ]
-
 on:
-  workflow_call:
+ push:
+   branches: [ "main" ]
+
+# on:
+#   workflow_call:
 
 permissions:
   repository-projects: write
